@@ -2735,6 +2735,11 @@ OdinAgent::write_handler(const String &str, Element *e, void *user_data, ErrorHa
 				                 agent->_active_client_scanning, agent->_active_AP_scanning, agent->_active_measurement_beacon);
       break;
     }   
+	
+	case handler_remove_client: {
+	  	
+	  break;
+	}
   }
   return 0;
 }
@@ -2771,7 +2776,7 @@ OdinAgent::add_handlers()
   add_write_handler("scan_APs", write_handler, handler_scan_APs);
   add_write_handler("send_measurement_beacon", write_handler, handler_send_measurement_beacon);
   add_write_handler("scanning_flags", write_handler, handler_scanning_flags);
-
+  add_write_handlet("remove_client", write_handler, handler_remove_client);
 }
 
 /* This debug function prints info about clients */
