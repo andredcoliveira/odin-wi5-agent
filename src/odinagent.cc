@@ -1676,7 +1676,7 @@ OdinAgent::stats_to_file(Packet *p, String filename)
     if(!exists_file(filename.c_str())){
         fp.open ( filename.c_str() , std::ofstream::out);
         if (fp.is_open()){
-            fp << "Time(sec);Src;Dst;Bssid;Seq;Rate(Mbs);Signal(mW);\n";
+            fp << "Time(sec);Src;Dst;Bssid;Seq;Rate(Mbps);RadioTapPowerLevel;\n";
         }else{std::cout << "Unable to open file";}
     }else{
         fp.open ( filename.c_str() , std::ofstream::out | std::ofstream::app);

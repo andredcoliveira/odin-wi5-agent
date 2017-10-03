@@ -51,9 +51,15 @@ sleep 1
 read -p "Now you can launch the Wi-5 odin controller and press Enter" pause
 
 # Clean the OpenVSwitch database
-echo "Cleaning OpenVSwitch database"
 if [ -d "/etc/openvswitch" ]; then
-  rm -r /etc/openvswitch
+  echo "OpenVSwitch folder already exists"
+else
+  echo "OpenVSwitch folder created"
+  mkdir /etc/openvswitch
+fi
+if [ -f "/etc/openvswitch/conf.db" ]; then
+  echo "Cleaning OpenVSwitch database"
+  rm /etc/openvswitch/conf.db
 fi
 if [ -f "/var/run/db.sock" ]; then
   rm /var/run/db.sock
