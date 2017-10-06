@@ -1676,7 +1676,7 @@ OdinAgent::stats_to_file(Packet *p, String filename)
     if(!exists_file(filename.c_str())){
         fp.open ( filename.c_str() , std::ofstream::out);
         if (fp.is_open()){
-            fp << "Time(sec);Src;Dst;Bssid;Seq;Rate(Mbs);Signal(mW);\n";
+            fp << "Time(sec);Src;Dst;Bssid;Seq;Rate(Mbps);RadioTapPowerLevel;\n";
         }else{std::cout << "Unable to open file";}
     }else{
         fp.open ( filename.c_str() , std::ofstream::out | std::ofstream::app);
@@ -2369,6 +2369,10 @@ OdinAgent::read_handler(Element *e, void *user_data)
 		fprintf(stderr, "[Odinagent.cc] ########### Read scanning flags --> ClientScanningFlag: %i   APScanningFlag: %i    measurementBeaconFlag: %i\n", agent->_active_client_scanning, agent->_active_AP_scanning, agent->_active_measurement_beacon);
       break;
     }
+    case handler_txpower: {
+      sa << agent->_tx_power << "\n";
+      break;
+    }
   }
 
   return sa.take_string();
@@ -2901,6 +2905,7 @@ OdinAgent::add_handlers()
   add_read_handler("scan_client", read_handler, handler_scan_client);
   add_read_handler("scan_APs", read_handler, handler_scan_APs);
   add_read_handler("scanning_flags", read_handler, handler_scanning_flags);
+  add_read_handler("txpower", read_handler, handler_txpower);
 
   add_write_handler("add_vap", write_handler, handler_add_vap);
   add_write_handler("set_vap", write_handler, handler_set_vap);

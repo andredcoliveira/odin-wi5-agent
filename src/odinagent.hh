@@ -130,7 +130,7 @@ public:
     handler_num_slots,
     handler_add_vap,
     handler_set_vap,
-	  handler_txstat,
+    handler_txstat,
     handler_rxstat,
     handler_remove_vap,
     handler_channel,
@@ -147,6 +147,7 @@ public:
 	handler_scan_APs,
 	handler_send_measurement_beacon,
 	handler_scanning_flags,
+    handler_txpower,
   };
 
   // Tx and Rx-stats about stations
