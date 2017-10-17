@@ -103,6 +103,7 @@ public:
   void send_assoc_response (EtherAddress, uint16_t status, uint16_t associd);
   void recv_open_auth_request (Packet *p);
   void send_open_auth_response (EtherAddress dst, uint16_t seq, uint16_t status);
+  void send_deauth (EtherAddress dst, EtherAddress bssid);
   Packet* wifi_encap (Packet *p, EtherAddress bssid);
 
   // Methods to handle pub-sub
@@ -148,6 +149,7 @@ public:
 	handler_send_measurement_beacon,
 	handler_scanning_flags,
     handler_txpower,
+	handler_send_deauth,
   };
 
   // Tx and Rx-stats about stations

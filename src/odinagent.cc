@@ -1357,6 +1357,51 @@ OdinAgent::send_assoc_response (EtherAddress dst, uint16_t status, uint16_t asso
 }
 
 /**
+ *  Send a deauthentication-request
+ *  
+ *  @autho Niels van Adrichem <niels.vanadrichem@tno.nl>
+ */
+
+void
+OdinAgent::send_deauth (EtherAddress dst, EtherAddress bssid) {
+	if (_debug_level % 10 > 0)
+		fprintf(stderr, "[Odinagent.cc] #################### Sending deauthentication request \n");// For testing only
+	
+	int max_len = sizeof (struct click_wifi) +
+		2 + /* Reason-code */
+		0;
+	
+	WritablePacket *p = Packet::make(max_len);
+	
+	if (p == 0)
+		return;
+	
+	struct click_wifi *w = (struct click_wifi *) p->data();
+	
+	w->i_fc[0] = WIFI_FC0_VERSION_0 | WIFI_FC0_TYPE_MGT | WIFI_FC0_SUBTYPE_DEAUTH;
+	w->i_fc[1] = WIFI_FC1_DIR_NODS;
+	
+	memcpy(w->i_addr1, dst.data(), 6);
+	memcpy(w->i_addr2, bssid.data(), 6);
+	memcpy(w->i_addr3, bssid.data(), 6);
+	
+	w->i_dur = 0;
+	w->i_seq = 0;
+	
+	uint16_t* ptr = (uint16_t*) p->data() + sizeof (struct click_wifi);
+	int actual_length = sizeof (struct click_wifi);
+	
+	*ptr = WIFI_REASON_UNSPECIFIED;
+
+	ptr += 2;
+	actual_length += 2;
+	
+	p->take(max_len - actual_length);
+	
+	output(0).push(p);
+}
+
+/**
  * Encapsulate an ethernet frame with a 802.11 header.
  * Borrowed from WifiEncap element.
  * NOTE: This method uses the FromDS mode (0x02)
@@ -2865,7 +2910,7 @@ OdinAgent::write_handler(const String &str, Element *e, void *user_data, ErrorHa
 		//agent->_num_measurement_beacon = 0;
     	break;
     }
-	case handler_scanning_flags: { 
+    case handler_scanning_flags: { 
       int client_scanning_flag;
       int AP_scanning_flag;
       int measurement_beacon_flag;
@@ -2886,6 +2931,27 @@ OdinAgent::write_handler(const String &str, Element *e, void *user_data, ErrorHa
 				                 agent->_active_client_scanning, agent->_active_AP_scanning, agent->_active_measurement_beacon);
       break;
     }   
+	
+    case handler_send_deauth: {
+	  EtherAddress sta_mac;
+	  EtherAddress vap_bssid;
+
+	  Args args = Args(agent, errh).push_back_words(str);
+      if (args.read_mp("STA_MAC", sta_mac)
+            .read_mp("VAP_BSSID", vap_bssid)
+            .consume() < 0)
+       {
+          return -1;
+        }
+	  
+	  if (agent->_debug_level % 10 > 0)
+		fprintf(stderr, "[Odinagent.cc] #################### Sending deauthentication requeset\n");      
+	
+	  agent->send_deauth (sta_mac, vap_bssid);
+	  
+ 	  break;
+ 	}
+	
   }
   return 0;
 }
@@ -2923,7 +2989,7 @@ OdinAgent::add_handlers()
   add_write_handler("scan_APs", write_handler, handler_scan_APs);
   add_write_handler("send_measurement_beacon", write_handler, handler_send_measurement_beacon);
   add_write_handler("scanning_flags", write_handler, handler_scanning_flags);
-
+  add_write_handler("send_deauth", write_handler, handler_send_deauth);
 }
 
 /* This debug function prints info about clients */
