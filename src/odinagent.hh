@@ -148,6 +148,7 @@ public:
 	handler_send_measurement_beacon,
 	handler_scanning_flags,
     handler_txpower,
+    handler_sta_rssi,
   };
 
   // Tx and Rx-stats about stations
