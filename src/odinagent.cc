@@ -2373,6 +2373,23 @@ OdinAgent::read_handler(Element *e, void *user_data)
       sa << agent->_tx_power << "\n";
       break;
     }
+    case handler_sta_rssi: {
+	 // Disable scanning
+     agent->_active_AP_scanning = 0;
+     // Scanning result
+     for (HashTable<EtherAddress, StationStats>::const_iterator iter = agent->_scanned_station_stats.begin();iter.live(); iter++) {
+      OdinAgent::StationStats n = iter.value();
+      if(n._equipment=="STA"){
+       sa << iter.key().unparse_colon();
+       double rssi = floor(n._avg_signal*100 + 0.5)/100;
+       sa << " " << rssi << "\n"; // signal in dBm
+      }
+     }
+
+	 if (agent->_debug_level % 10 > 0)
+            fprintf(stderr, "[Odinagent.cc] ########### Scanning: Sending AP scanning values \n");
+     break;
+    }
   }
 
   return sa.take_string();
@@ -2906,6 +2923,7 @@ OdinAgent::add_handlers()
   add_read_handler("scan_APs", read_handler, handler_scan_APs);
   add_read_handler("scanning_flags", read_handler, handler_scanning_flags);
   add_read_handler("txpower", read_handler, handler_txpower);
+  add_read_handler("sta_rssi", read_handler, handler_sta_rssi);
 
   add_write_handler("add_vap", write_handler, handler_add_vap);
   add_write_handler("set_vap", write_handler, handler_set_vap);
