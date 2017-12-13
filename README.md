@@ -28,13 +28,15 @@ to generate the appropriate Odin agent click file.
 
 This is an example of how to use the python command:
 
-    $ python agent-click-file-gen.py 4 50  14:CC:20:AC:72:91 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra odin-unizar 192.168.1.7 0 11 12 25 0 1 100 10 5 100 0 FF:FF:FF:FF:FF:FF
+    $ python agent-click-file-gen.py 4 500 500 14:CC:20:AC:72:91 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra odin-unizar 192.168.1.7 0 11 12 25 0 1 100 10 5 100 0 FF:FF:FF:FF:FF:FF
 
 where the parameters have the next meaning:
 
 `4`			number of the channel
 
-`50`			size of the queue
+`500`			size of the input queue
+
+`500`			size of the output queue
 
 `14:CC:20:AC:72:91`	MAC address of the AP
 
