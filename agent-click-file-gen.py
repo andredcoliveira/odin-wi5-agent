@@ -13,13 +13,14 @@
 
 import sys
 
-if (len(sys.argv) != 21):
+if (len(sys.argv) != 22):
     print 'Usage:'
     print ''
-    print '%s <AP_CHANNEL> <QUEUE_SIZE> <MAC_ADDR_AP> <ODIN_MASTER_IP> <ODIN_MASTER_PORT> <DEBUGFS_FILE> <SSIDAGENT> <ODIN_AGENT_IP> <DEBUG_CLICK> <DEBUG_ODIN> <TX_RATE> <TX_POWER> <HIDDEN> <MULTICHANNEL_AGENTS> <DEFAULT_BEACON_INTERVAL> <BURST_BEACON_INTERVAL> <MEASUREMENT_BEACON_INTERVAL>' %(sys.argv[0])
+    print '%s <AP_CHANNEL> <QUEUE_SIZE_IN> <QUEUE_SIZE_OUT> <MAC_ADDR_AP> <ODIN_MASTER_IP> <ODIN_MASTER_PORT> <DEBUGFS_FILE> <SSIDAGENT> <ODIN_AGENT_IP> <DEBUG_CLICK> <DEBUG_ODIN> <TX_RATE> <TX_POWER> <HIDDEN> <MULTICHANNEL_AGENTS> <DEFAULT_BEACON_INTERVAL> <BURST_BEACON_INTERVAL> <MEASUREMENT_BEACON_INTERVAL>' %(sys.argv[0])
     print ''
     print 'AP_CHANNEL: it must be the same where mon0 of the AP is placed. To avoid problems at init time, it MUST be the same channel specified in the /etc/config/wireless file of the AP'
-    print 'QUEUE_SIZE: you can use the size 50'
+    print 'QUEUE_SIZE_IN: you can use the size 500'
+    print 'QUEUE_SIZE_OUT: you can use the size 500'
     print 'MAC_ADDR_AP: the MAC of the wireless interface mon0 of the AP. e.g. 60:E3:27:4F:C7:E1'
     print 'ODIN_MASTER_IP is the IP of the openflow controller where Odin master is running'
     print 'ODIN_MASTER_PORT should be 2819 by default'
@@ -50,7 +51,7 @@ if (len(sys.argv) != 21):
     print '              For capture all traffic: FF:FF:FF:FF:FF:FF'
     print ''
     print 'Example:'
-    print '$ python %s 9 50 60:E3:27:4F:C7:E1 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
+    print '$ python %s 9 500 500 60:E3:27:4F:C7:E1 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
     print ''
     print 'and then run the .cli file you have generated'
     print 'click$ ./bin/click agent.cli'
@@ -58,26 +59,27 @@ if (len(sys.argv) != 21):
 
 # Read the arguments
 AP_CHANNEL = sys.argv[1]
-QUEUE_SIZE = sys.argv[2]
-AP_UNIQUE_BSSID = sys.argv[3]		    # FIXME. It seems it does not matter. Remove this parameter?
-ODIN_MASTER_IP = sys.argv[4]
-ODIN_MASTER_PORT = sys.argv[5]
-DEBUGFS_FILE = sys.argv[6]
-SSIDAGENT = sys.argv[7]
-DEFAULT_GW = sys.argv[8]
-AP_UNIQUE_IP = sys.argv[8]		      # FIXME. It seems this parameter does not matter. Remove this line?
-DEBUG_CLICK = int(sys.argv[9])
-DEBUG_ODIN = int(sys.argv[10])
-TX_RATE = int(sys.argv[11])
-TX_POWER = int(sys.argv[12])
-HIDDEN = int(sys.argv[13])
-MULTICHANNEL_AGENTS = int(sys.argv[14])
-DEFAULT_BEACON_INTERVAL = int(sys.argv[15])
-BURST_BEACON_INTERVAL = int(sys.argv[16])
-BURST = int(sys.argv[17])
-MEASUREMENT_BEACON_INTERVAL = int(sys.argv[18])
-CAPTURE_MODE = int(sys.argv[19])
-MAC_CAPTURE = sys.argv[20]
+QUEUE_SIZE_IN = sys.argv[2]
+QUEUE_SIZE_OUT = sys.argv[3]
+AP_UNIQUE_BSSID = sys.argv[4]		    # FIXME. It seems it does not matter. Remove this parameter?
+ODIN_MASTER_IP = sys.argv[5]
+ODIN_MASTER_PORT = sys.argv[6]
+DEBUGFS_FILE = sys.argv[7]
+SSIDAGENT = sys.argv[8]
+DEFAULT_GW = sys.argv[9]
+AP_UNIQUE_IP = sys.argv[9]		      # FIXME. It seems this parameter does not matter. Remove this line?
+DEBUG_CLICK = int(sys.argv[10])
+DEBUG_ODIN = int(sys.argv[11])
+TX_RATE = int(sys.argv[12])
+TX_POWER = int(sys.argv[13])
+HIDDEN = int(sys.argv[14])
+MULTICHANNEL_AGENTS = int(sys.argv[15])
+DEFAULT_BEACON_INTERVAL = int(sys.argv[16])
+BURST_BEACON_INTERVAL = int(sys.argv[17])
+BURST = int(sys.argv[18])
+MEASUREMENT_BEACON_INTERVAL = int(sys.argv[19])
+CAPTURE_MODE = int(sys.argv[20])
+MAC_CAPTURE = sys.argv[21]
   
 # Set the value of some constants
 NETWORK_INTERFACE_NAMES = "mon"		 # beginning of the network interface names in monitor mode. e.g. mon
@@ -183,7 +185,7 @@ q :: Queue(%s)
   -> SetTXRate (%s)	// e.g. if it is 108, this means 54Mbps=108*500kbps
   -> RadiotapEncap()
   -> to_dev :: ToDevice (%s0);
-''' % (QUEUE_SIZE, TX_RATE, NETWORK_INTERFACE_NAMES )
+''' % (QUEUE_SIZE_OUT, TX_RATE, NETWORK_INTERFACE_NAMES )
 
 
 print '''  odinagent[2]
@@ -197,7 +199,7 @@ q2 :: Queue(%s)
   -> SetTXRate (%s)	// e.g. if it is 108, this means 54Mbps=108*500kbps
   -> RadiotapEncap()
   -> to_dev2 :: ToDevice (%s1);
-''' % (QUEUE_SIZE, TX_RATE, NETWORK_INTERFACE_NAMES )
+''' % (QUEUE_SIZE_OUT, TX_RATE, NETWORK_INTERFACE_NAMES )
 
 print '''
 odinagent[4]
@@ -206,25 +208,25 @@ odinagent[4]
 
 print '''
 // ----------------Packets coming up (from the STA to the AP) go to the input 0 of the Odin Agent
-from_dev :: FromDevice(%s0, HEADROOM 50)
+from_dev :: FromDevice(%s0, HEADROOM %s)
   -> RadiotapDecap()
   -> ExtraDecap()
   -> phyerr_filter :: FilterPhyErr()
   -> tx_filter :: FilterTX()
   -> dupe :: WifiDupeFilter()	// Filters out duplicate 802.11 packets based on their sequence number
 								// click/elements/wifi/wifidupefilter.hh
-  -> [0]odinagent''' % ( NETWORK_INTERFACE_NAMES )
+  -> [0]odinagent''' % ( NETWORK_INTERFACE_NAMES, QUEUE_SIZE_IN )
 
 print '''
 // ----------------Packets coming up (from the STA to the AP) go to the input 0 of the Odin Agent
-from_dev1 :: FromDevice(%s1, HEADROOM 50)
+from_dev1 :: FromDevice(%s1, HEADROOM %s)
   -> RadiotapDecap()
   -> ExtraDecap()
   -> phyerr_filter1 :: FilterPhyErr()
   -> tx_filter1 :: FilterTX()
   -> dupe1 :: WifiDupeFilter()	// Filters out duplicate 802.11 packets based on their sequence number
 								// click/elements/wifi/wifidupefilter.hh
-  -> [2]odinagent''' % ( NETWORK_INTERFACE_NAMES )
+  -> [2]odinagent''' % ( NETWORK_INTERFACE_NAMES, QUEUE_SIZE_IN )
 
 print '''odinagent[0]
   -> q''' 
