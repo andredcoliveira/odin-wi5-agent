@@ -13,10 +13,11 @@
 
 import sys
 
+# the length of 'sys.argv' has to be 'number of arguments + 1' ('sys.argv[0]' is the name of the script)
 if (len(sys.argv) != 22):
     print 'Usage:'
     print ''
-    print '%s <AP_CHANNEL> <QUEUE_SIZE_IN> <QUEUE_SIZE_OUT> <MAC_ADDR_AP> <ODIN_MASTER_IP> <ODIN_MASTER_PORT> <DEBUGFS_FILE> <SSIDAGENT> <ODIN_AGENT_IP> <DEBUG_CLICK> <DEBUG_ODIN> <TX_RATE> <TX_POWER> <HIDDEN> <MULTICHANNEL_AGENTS> <DEFAULT_BEACON_INTERVAL> <BURST_BEACON_INTERVAL> <MEASUREMENT_BEACON_INTERVAL>' %(sys.argv[0])
+    print '%s <AP_CHANNEL> <QUEUE_SIZE_IN> <QUEUE_SIZE_OUT> <MAC_ADDR_AP> <ODIN_MASTER_IP> <ODIN_MASTER_PORT> <DEBUGFS_FILE> <SSIDAGENT> <ODIN_AGENT_IP> <DEBUG_CLICK> <DEBUG_ODIN> <TX_RATE> <TX_POWER> <HIDDEN> <MULTICHANNEL_AGENTS> <DEFAULT_BEACON_INTERVAL> <BURST_BEACON_INTERVAL> <BURST> <MEASUREMENT_BEACON_INTERVAL> <CAPTURE_MODE> <MAC_CAPTURE>' %(sys.argv[0])
     print ''
     print 'AP_CHANNEL: it must be the same where mon0 of the AP is placed. To avoid problems at init time, it MUST be the same channel specified in the /etc/config/wireless file of the AP'
     print 'QUEUE_SIZE_IN: you can use the size 500'
@@ -51,7 +52,7 @@ if (len(sys.argv) != 22):
     print '              For capture all traffic: FF:FF:FF:FF:FF:FF'
     print ''
     print 'Example:'
-    print '$ python %s 9 500 500 60:E3:27:4F:C7:E1 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
+    print '$ python %s 9 500 500 74:f0:6d:20:d4:74 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 0 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
     print ''
     print 'and then run the .cli file you have generated'
     print 'click$ ./bin/click agent.cli'
