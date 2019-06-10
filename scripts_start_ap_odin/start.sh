@@ -15,18 +15,20 @@
 
 ## Variables
 echo "Setting variables"
-CTLIP=192.168.1.129         # Controller IP address
-SW=br0                      # Name of the bridge
+CTLIP=172.16.1.100          # Controller IP address
+SW="br-lan"                      # Name of the bridge
 CPINTERFACE="eth1"          # Interface for the control plane
 #DPINTERFACE="eth1.2"       # Interface for the data plane (eth1.2 works in the TP-Link AP)
 DPINTERFACE="eth2"          # Interface for the data plane (eth2 works in a PC)
-TAPINTERFACE="ap"           # tap port for connecting to the Internet
+CPAGENTIP=172.16.1.2        # Interface for the control plane
+DPAGENTIP=172.16.2.2        # Interface for the data plane (eth2 works in a PC)
+TAPINTERFACE="tap0"         # tap port for connecting to the Internet
 MON0INTERFACE="mon0"        # main wireless interface in monitor mode
-MON1INTERFACE="mon1"        # auxiliary wireless interface in monitor mode
+MON1INTERFACE="mon2"        # auxiliary wireless interface in monitor mode
 WIRELESS0INTERFACE="wlan0"  # main wireless interface
-WIRELESS1INTERFACE="wlan1"  # auxiliary wireless interface
+WIRELESS1INTERFACE="wlan2"  # auxiliary wireless interface
 PHY0INTERFACE="phy0"        # main wireless physical interface
-PHY1INTERFACE="phy1"        # auxiliary wireless physical interface
+PHY1INTERFACE="phy2"        # auxiliary wireless physical interface
 VSCTL="ovs-vsctl"           # Command to be used to invoke openvswitch
 
 ## Stopping Network Manager
@@ -37,8 +39,8 @@ service NetworkManager stop
 
 ## Setting interfaces
 echo "Setting interfaces"
-ifconfig $CPINTERFACE 192.168.1.1
-ifconfig $DPINTERFACE 192.168.2.1
+ifconfig $CPINTERFACE $CPAGENTIP
+ifconfig $DPINTERFACE $DPAGENTIP
 sleep 0.5
 ifconfig $WIRELESS0INTERFACE down
 sleep 0.5
@@ -85,15 +87,15 @@ sleep 0.5
 ## Routes
 # add these routes in order to permit control from other networks (this is very particular of Unizar)
 # traffic from these networks will not go through the default gateway
-route add -net 155.210.158.0 netmask 255.255.255.0 gw 155.210.157.254 eth0
-route add -net 155.210.156.0 netmask 255.255.255.0 gw 155.210.157.254 eth0
+# route add -net 155.210.158.0 netmask 255.255.255.0 gw 155.210.157.254 eth0
+# route add -net 155.210.156.0 netmask 255.255.255.0 gw 155.210.157.254 eth0
 
 
 ## OVS
 echo "Restarting OpenvSwitch"
-/etc/init.d/openvswitch-switch stop
+/etc/init.d/openvswitch stop
 sleep 1
-#rmmod openvswitch-switch
+#rmmod openvswitch
 # The next line is added in order to start the controller after stopping openvswitch
 read -p "Now you can launch the Wi-5 odin controller and press Enter" pause
 
@@ -113,7 +115,7 @@ fi
 
 # Launch OpenVSwitch
 echo "Launching OpenVSwitch"
-/etc/init.d/openvswitch-switch start
+/etc/init.d/openvswitch start
 
 # Create the bridge
 $VSCTL add-br $SW
@@ -157,8 +159,8 @@ sleep 1
 ## OpenVSwitch Rules
 # OpenFlow rules needed to make it possible for DHCP traffic to arrive to the Wi-5 odin controller
 # It may happen that the data plane port is port 1 and the tap port is port 2
-ovs-ofctl add-flow br0 in_port=2,dl_type=0x0800,nw_proto=17,tp_dst=67,actions=output:1,CONTROLLER
-ovs-ofctl add-flow br0 in_port=1,dl_type=0x0800,nw_proto=17,tp_dst=68,actions=output:CONTROLLER,2
+ovs-ofctl add-flow $SW in_port=2,dl_type=0x0800,nw_proto=17,tp_dst=67,actions=output:1,CONTROLLER
+ovs-ofctl add-flow $SW in_port=1,dl_type=0x0800,nw_proto=17,tp_dst=68,actions=output:CONTROLLER,2
 # It may happen that the data plane port is port 2 and the tap port is port 1
-ovs-ofctl add-flow br0 in_port=1,dl_type=0x0800,nw_proto=17,tp_dst=67,actions=output:2,CONTROLLER
-ovs-ofctl add-flow br0 in_port=2,dl_type=0x0800,nw_proto=17,tp_dst=68,actions=output:CONTROLLER,1
+ovs-ofctl add-flow $SW in_port=1,dl_type=0x0800,nw_proto=17,tp_dst=67,actions=output:2,CONTROLLER
+ovs-ofctl add-flow $SW in_port=2,dl_type=0x0800,nw_proto=17,tp_dst=68,actions=output:CONTROLLER,1

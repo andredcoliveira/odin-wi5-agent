@@ -52,7 +52,8 @@ if (len(sys.argv) != 22):
     print '              For capture all traffic: FF:FF:FF:FF:FF:FF'
     print ''
     print 'Example:'
-    print '$ python %s 9 500 500 74:f0:6d:20:d4:74 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 0 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
+    # print '$ python %s 9 500 500 74:f0:6d:20:d4:74 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 0 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
+    print '$ python %s 11 500 500 D4:CA:6D:11:DC:3E 172.16.1.100 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra odin1 172.16.1.2 1 01 260 16 0 1 100 10 5 100 1 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
     print ''
     print 'and then run the .cli file you have generated'
     print 'click$ ./bin/click agent.cli'
@@ -85,8 +86,8 @@ MAC_CAPTURE = sys.argv[21]
 # Set the value of some constants
 NETWORK_INTERFACE_NAMES = "mon"		 # beginning of the network interface names in monitor mode. e.g. mon
 TAP_INTERFACE_NAME = "ap"		       # name of the TAP device that Click will create in the Access Point
-STA_IP = "192.168.1.11"			       # IP address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
-STA_MAC = "74:F0:6D:20:D4:74"		   # MAC address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
+STA_IP = "172.16.2.10"			       # IP address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
+STA_MAC = "6C:C7:EC:B2:4B:AB"		   # MAC address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
 
 print '''
 // This is the scheme:
