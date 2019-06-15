@@ -53,7 +53,7 @@ if (len(sys.argv) != 22):
     print ''
     print 'Example:'
     # print '$ python %s 9 500 500 74:f0:6d:20:d4:74 192.168.1.129 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra wi5-demo 192.168.1.9 0 01 108 25 0 1 100 10 0 100 0 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
-    print '$ python %s 11 500 500 D4:CA:6D:11:DC:3E 172.16.1.100 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra odin1 172.16.1.2 1 01 260 16 0 1 100 10 5 100 1 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
+    print '$ python %s 13 500 500 D4:CA:6D:11:DC:3E 172.16.1.100 2819 /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra ow-wifi 172.16.1.1 2 02 48 0 0 1 100 10 5 100 1 FF:FF:FF:FF:FF:FF > agent.cli' %(sys.argv[0])
     print ''
     print 'and then run the .cli file you have generated'
     print 'click$ ./bin/click agent.cli'
@@ -84,15 +84,17 @@ CAPTURE_MODE = int(sys.argv[20])
 MAC_CAPTURE = sys.argv[21]
   
 # Set the value of some constants
-NETWORK_INTERFACE_NAMES = "mon"		 # beginning of the network interface names in monitor mode. e.g. mon
-TAP_INTERFACE_NAME = "ap"		       # name of the TAP device that Click will create in the Access Point
+# NETWORK_INTERFACE_NAMES = "mon"		 # beginning of the network interface names in monitor mode. e.g. mon
+MONITOR_INTERFACE_1 = "mon0"
+MONITOR_INTERFACE_2 = "mon2"
+TAP_INTERFACE_NAME = "tap0"		     # name of the TAP device that Click will create in the Access Point
 STA_IP = "172.16.2.10"			       # IP address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
 STA_MAC = "6C:C7:EC:B2:4B:AB"		   # MAC address of the STA in the LVAP tuple. It is only necessary for a single client without DHCP
 
 print '''
 // This is the scheme:
 //
-//            TAP interface 'ap' in the machine that runs Click
+//            TAP interface 'tap0' in the machine that runs Click
 //                   | ^
 // from host         | |      to host
 //                   v |
@@ -102,7 +104,7 @@ print '''
 //             | ^        | ^
 // to device   | |        | | to device 
 //             V |        V |
-//            'mon0'     'mon1'    interfaces in the machine that runs Click. They must be in monitor mode
+//            'mon0'     'mon2'    interfaces in the machine that runs Click. They must be in monitor mode
 //'''
 
 print '''
@@ -143,8 +145,8 @@ print '''
 // ----------------Packets going down (AP to STA)
 // I don't want the ARP requests from the AP to the stations to go to the network device
 //so click is in the middle and answers the ARP to the host on behalf of the station
-//'ap' is a Linux tap device which is instantiated by Click in the machine.
-//FromHost reads packets from 'ap'
+//'tap0' is a Linux tap device which is instantiated by Click in the machine.
+//FromHost reads packets from 'tap0'
 // The arp responder configuration here doesnt matter, odinagent.cc sets it according to clients
 FromHost(%s, HEADROOM 50)
   -> fhcl :: Classifier(12/0806 20/0001, -)
@@ -186,8 +188,8 @@ print '''
 q :: Queue(%s)
   -> SetTXRate (%s)	// e.g. if it is 108, this means 54Mbps=108*500kbps
   -> RadiotapEncap()
-  -> to_dev :: ToDevice (%s0);
-''' % (QUEUE_SIZE_OUT, TX_RATE, NETWORK_INTERFACE_NAMES )
+  -> to_dev :: ToDevice (%s);
+''' % (QUEUE_SIZE_OUT, TX_RATE, MONITOR_INTERFACE_1 )
 
 
 print '''  odinagent[2]
@@ -196,12 +198,12 @@ print '''  odinagent[2]
 
 
 print '''
-// create a queue 'q2' for transmission of packets by the secondary interface (mon1) and connect it to SetTXRate-RadiotapEncap
+// create a queue 'q2' for transmission of packets by the secondary interface (mon2) and connect it to SetTXRate-RadiotapEncap
 q2 :: Queue(%s)
   -> SetTXRate (%s)	// e.g. if it is 108, this means 54Mbps=108*500kbps
   -> RadiotapEncap()
-  -> to_dev2 :: ToDevice (%s1);
-''' % (QUEUE_SIZE_OUT, TX_RATE, NETWORK_INTERFACE_NAMES )
+  -> to_dev2 :: ToDevice (%s);
+''' % (QUEUE_SIZE_OUT, TX_RATE, MONITOR_INTERFACE_2 )
 
 print '''
 odinagent[4]
@@ -210,25 +212,25 @@ odinagent[4]
 
 print '''
 // ----------------Packets coming up (from the STA to the AP) go to the input 0 of the Odin Agent
-from_dev :: FromDevice(%s0, HEADROOM %s)
+from_dev :: FromDevice(%s, HEADROOM %s)
   -> RadiotapDecap()
   -> ExtraDecap()
   -> phyerr_filter :: FilterPhyErr()
   -> tx_filter :: FilterTX()
   -> dupe :: WifiDupeFilter()	// Filters out duplicate 802.11 packets based on their sequence number
 								// click/elements/wifi/wifidupefilter.hh
-  -> [0]odinagent''' % ( NETWORK_INTERFACE_NAMES, QUEUE_SIZE_IN )
+  -> [0]odinagent''' % ( MONITOR_INTERFACE_1, QUEUE_SIZE_IN )
 
 print '''
 // ----------------Packets coming up (from the STA to the AP) go to the input 0 of the Odin Agent
-from_dev1 :: FromDevice(%s1, HEADROOM %s)
+from_dev1 :: FromDevice(%s, HEADROOM %s)
   -> RadiotapDecap()
   -> ExtraDecap()
   -> phyerr_filter1 :: FilterPhyErr()
   -> tx_filter1 :: FilterTX()
   -> dupe1 :: WifiDupeFilter()	// Filters out duplicate 802.11 packets based on their sequence number
 								// click/elements/wifi/wifidupefilter.hh
-  -> [2]odinagent''' % ( NETWORK_INTERFACE_NAMES, QUEUE_SIZE_IN )
+  -> [2]odinagent''' % ( MONITOR_INTERFACE_2, QUEUE_SIZE_IN )
 
 print '''odinagent[0]
   -> q''' 
