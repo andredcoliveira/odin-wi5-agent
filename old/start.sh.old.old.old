@@ -22,20 +22,25 @@ echo "Configuring agent #$1"
 
 ## Variables
 echo "Setting variables"
-CTLIP=172.16.1.100          # Controller IP address
-SW="br0"                    # Name of the bridge
-CPINTERFACE="br-wlan"          # Interface for the control plane
-DPINTERFACE="br-wlan"          # Interface for the data plane (eth2 works in a PC)
-CPAGENTIP=172.16.1.$1       # IP address for the control plane
-DPAGENTIP=172.16.2.$1       # IP address for the data plane
-TAPINTERFACE="tap0"         # tap port for connecting to the Internet
-MON0INTERFACE="mon0"        # main wireless interface in monitor mode
-MON2INTERFACE="mon2"        # auxiliary wireless interface in monitor mode
-WIRELESS0INTERFACE="wlan0"  # main wireless interface
+CTLIP=172.16.1.100            # Controller IP address
+SW="br0"                      # Name of the bridge
+CPINTERFACE="br-wlan"         # Interface for the control plane
+DPINTERFACE="br-wlan"         # Interface for the data plane (eth2 works in a PC)
+CPAGENTIP=172.16.1.$1         # IP address for the control plane
+DPAGENTIP=172.16.2.$1         # IP address for the data plane
+TAPINTERFACE="tap0"           # tap port for connecting to the Internet
+MON0INTERFACE="mon0"          # main wireless interface in monitor mode
+MON2INTERFACE="mon2"          # auxiliary wireless interface in monitor mode
+WIRELESS0INTERFACE="wlan0"    # main wireless interface
 # WIRELESS2INTERFACE="wlan2"  # auxiliary wireless interface
-PHY0INTERFACE="phy0"        # main wireless physical interface
+PHY0INTERFACE="phy0"          # main wireless physical interface
 # PHY2INTERFACE="phy2"        # auxiliary wireless physical interface
-CHANNEL=13
+if [ "$1" == "1" ]; then
+  CHANNEL=13
+elif [ "$1" == "2" ]; then
+  CHANNEL=6
+fi
+# CHANNEL=13
 VSCTL="ovs-vsctl"           # Command to be used to invoke openvswitch
 
 ## Stopping Network Manager
@@ -46,8 +51,10 @@ VSCTL="ovs-vsctl"           # Command to be used to invoke openvswitch
 
 ## Restart to default configurations
 echo "Restarting network configurations"
+/etc/init.d/openvswitch stop
+sleep 1
 /etc/init.d/network restart
-sleep 5
+sleep 1
 
 ## Setting interfaces
 echo "Setting interfaces"
@@ -80,9 +87,9 @@ ifconfig $MON0INTERFACE mtu 1532
 sleep 1
 ifconfig $MON2INTERFACE mtu 1532
 sleep 1
-# iw $PHY0INTERFACE set channel $CHANNEL
-# echo "$PHY0INTERFACE is now in channel $CHANNEL"
-# sleep 1
+iw $PHY0INTERFACE set channel $CHANNEL
+echo "$PHY0INTERFACE is now in channel $CHANNEL"
+sleep 1
 # ifconfig $WIRELESS0INTERFACE up
 # echo "$WIRELESS0INTERFACE is now up"
 # sleep 1
@@ -120,11 +127,13 @@ fi
 # Launch OpenVSwitch
 echo "Launching OpenVSwitch"
 /etc/init.d/openvswitch start
-sleep 1
+sleep 2
 
 # Create the bridge
 $VSCTL add-br $SW
+sleep 2
 ifconfig $SW up # In OpenWrt 15.05 the bridge is created down
+sleep 1
 
 # Configure the OpenFlow Controller
 $VSCTL set-controller $SW tcp:$CTLIP:6633
@@ -137,7 +146,7 @@ for i in $DPINTERFACE ; do
 done
 ip addr flush dev br-wlan
 sleep 1
-# ip addr add 172.16.0.1/16 dev $SW
+# ip addr add 172.16.0.${1}/16 dev $SW
 # sleep 1
 ip addr add $CPAGENTIP/16 dev $SW
 sleep 1
@@ -157,9 +166,8 @@ echo "Launching Click"
 
 
 #cd /mnt/usb
-./click < click-align agent.cli &    # This makes the alignment and calls Click at the same time
-# ./click/bin/click agentpc.cli &    # This calls Click
-#./click aagent.cli &             # Old command, which required an aligned version of the .cli file
+./click < click-align agent${1}.cli &    # This makes the alignment and calls Click at the same time
+# ./click/bin/click agent${1}.cli &    # This calls Click
 sleep 1
 # From this moment, a new tap interface called 'TAPINTERFACE' will be created by Click
 
