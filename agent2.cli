@@ -15,7 +15,7 @@
 //
 
 // call OdinAgent::configure to create and configure an Odin agent:
-odinagent::OdinAgent(HWADDR D4:CA:6D:11:DC:3E, RT rates, CHANNEL 13, DEFAULT_GW 172.16.0.2, DEBUGFS /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra, SSIDAGENT ow-wifi, DEBUG_ODIN 1, TX_RATE 108, TX_POWER 20, HIDDEN 0, MULTICHANNEL_AGENTS 1, DEFAULT_BEACON_INTERVAL 100, BURST_BEACON_INTERVAL 10, BURST 5, MEASUREMENT_BEACON_INTERVAL 100, CAPTURE_MODE 1, MAC_CAPTURE FF:FF:FF:FF:FF:FF)
+odinagent::OdinAgent(HWADDR D4:CA:6D:11:DC:3E, RT rates, CHANNEL 1, DEFAULT_GW 172.16.0.2, DEBUGFS /sys/kernel/debug/ieee80211/phy0/ath9k/bssid_extra, SSIDAGENT ow-wifi, DEBUG_ODIN 1, TX_RATE 108, TX_POWER 15, HIDDEN 0, MULTICHANNEL_AGENTS 0, DEFAULT_BEACON_INTERVAL 100, BURST_BEACON_INTERVAL 10, BURST 5, MEASUREMENT_BEACON_INTERVAL 100, CAPTURE_MODE 1, MAC_CAPTURE FF:FF:FF:FF:FF:FF)
 
 // send a ping to odinsocket every 2 seconds
 TimedSource(2, "ping
@@ -40,9 +40,7 @@ FromHost(tap0, HEADROOM 50)
 				// 0806 is the ARP ethertype, http://en.wikipedia.org/wiki/EtherType
 				// 20 means the 20th byte of the eth frame, i.e. the 6th byte of the ARP packet: 
 				// "Operation". It specifies the operation the sender is performing: 1 for request, 2 for reply.
-  -> ARPPrint("[Click] ARP request from host to resolve STA's ARP")
   -> fh_arpr :: ARPResponder(172.16.2.10 6C:C7:EC:B2:4B:AB) 	// looking for an STA's ARP: Resolve STA's ARP
-  -> ARPPrint("[Click] Resolving client's ARP by myself")
   -> ToHost(tap0)
 
 // Anything from host that is not an ARP request goes to the input 1 of Odin Agent
@@ -51,7 +49,6 @@ fhcl[1]
 
 // Not looking for an STA's ARP? Then let it pass.
 fh_arpr[1]
-  -> Print("[Click] ARP request to another STA goes to Odin agent port 1")
   -> [1]odinagent
 
 // create a queue 'q' for transmission of packets by the primary interface (mon0) and connect it to SetTXRate-RadiotapEncap
@@ -107,11 +104,9 @@ odinagent[1]
 				// 0806 is the ARP ethertype, http://en.wikipedia.org/wiki/EtherType
 				// 20 means the 20th byte of the eth frame, i.e. the 6th byte of the ARP packet: 
 				// "Operation". It specifies the operation the sender is performing: 1 for request
-  -> Print("[Click] ARP request from the STA") //debug level 1
   -> arp_resp::ARPResponder (172.16.0.2 D4:CA:6D:11:DC:3E) // ARP fast path for STA
 									// the STA is asking for the MAC address of the AP
 									// add the IP of the AP and the BSSID of the LVAP corresponding to this STA
-  -> Print("[Click] ARP fast path for STA: the STA is asking for the MAC address of the AP")
   -> [1]odinagent
 
 // Non ARP packets. Re-write MAC address to
@@ -124,5 +119,4 @@ arp_c[1]
 // ARP Fast path fail. Re-write MAC address (without modification)
 // to reflect datapath or learning switch will drop it
 arp_resp[1]
-  -> Print("[Click] ARP Fast path fail")
   -> ToHost(tap0)

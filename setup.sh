@@ -16,7 +16,7 @@ SW="br0"                                          # Name of the OpenVSwitch brid
 INT="br-wlan"
 AGENTIP=172.16.0.${1}
 TAP="tap0"                                        # tap port for connecting to the Internet
-CHANNEL=13
+CHANNEL=1
 OVS_VSCTL="/usr/bin/ovs-vsctl"                    # Command to be used to invoke openvswitch
 OVS_CTL="/usr/share/openvswitch/scripts/ovs-ctl"
 
@@ -27,6 +27,8 @@ ip link set wlan0 down
 iw phy phy0 interface add mon0 type monitor
 echo "Added mon0 interface"
 iw phy phy0 interface add mon2 type monitor
+# iw phy dummy0 interface add mon2 type monitor
+# ip link set name mon2 dev dummy0  # most recent
 echo "Added mon2 interface"
 ip link set mon0 down
 ip link set mon2 down
